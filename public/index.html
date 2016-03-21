@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Photo Maps</title>
+	<script src="public/bower_components/jquery/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="public/MarkerClusterer.js"></script>
+	<link rel="stylesheet" type="text/css" href="public/style.css">
+</head>
+<body>
+	<div id="overlay">...loading...</div>
+	<div id="map"></div>
+	<script async defer src="http://maps.google.com/maps/api/js?callback=initMap"></script>
+	<script type="text/javascript">
+
+	var map,
+		markerClusterer = null,
+		pins = {},
+		infowindow,
+		clock,
+		slideUpTime = 500,
+		loadingDelayTime = 2000,
+		overlay = $("#overlay"),
+		baseurl = 'http://localhost:8080';
+
+	function loading(show) {
+		if (show) {
+			clock = setTimeout(function(){ 
+				overlay.slideDown(0);
+			}, loadingDelayTime);
+		}else{
+			clearTimeout(clock);
+			overlay.slideUp(slideUpTime);
+		}
+	}
+
+	function initMap() {
+		  var myLatLng = {lat: 34.20633333333333, lng: -118.522};
+		  map = new google.maps.Map(document.getElementById('map'), {
+		    zoom: 5,
+		    center: myLatLng
+		  });
+		  
+		  $.ajax({
+				url: baseurl + '/directory',
+				type: 'get',
+				success: function(data){
+					console.log('data',data);
+					pins = data;
+					overlay.slideUp(slideUpTime);
+					refreshMap();
+				}
+			});
+	}
+
+	function fetchInfoWindowContent(paths, center){
+		loading(true);
+		var loadedImagesCount = 0;
+		var content = "<div class='thumb-wrap'>";
+		paths.forEach(function(path){
+			var imageSrc = baseurl+"/photo/?path="+path;
+			content += "<a href='"+imageSrc+"' target='_blank'><img src='"+imageSrc+"' /></a>";
+			var image = new Image();
+			image.onload = function(){
+		        loadedImagesCount++;
+		        if (loadedImagesCount >= paths.length) {
+		            //loaded all pictures
+		            infowindow.setContent("<div class='thumb-wrap'>"+content+"</div>");
+					infowindow.setPosition(center);
+					infowindow.open(map);
+					loading(false);
+		        }
+		    }
+		    image.src = imageSrc;
+			
+		});
+		content += "</div>";
+
+	}
+
+	function refreshMap(){
+
+		if (markerClusterer) {
+          markerClusterer.clearMarkers();
+        }
+        var markers = [];
+
+        infowindow = new google.maps.InfoWindow({
+        	content: '', 
+        	position: {lat: 34.2068, lng: -118.5217},
+        });
+
+        for(var k in pins){
+			(function(pin){
+				marker = new google.maps.Marker({
+				    position: pin.googleMarker.position,
+				    map: map,
+				    title: pin.path,
+				    // icon: markerImage
+				});
+				google.maps.event.addListener(marker, 'click', function() {
+					fetchInfoWindowContent([pin.path], this.position);
+				});
+				markers.push(marker);
+			}(pins[k]));
+		}
+
+		markerClusterer = new MarkerClusterer(map, markers, {
+			gridSize:30, //The grid size of a cluster in pixels. The grid is a square. The default value is 60.  
+			minimumClusterSize: 5, //The minimum number of markers needed in a cluster before the markers are hidden and a cluster marker appears. The default value is 2.
+   			// maxZoom: 15
+        });
+
+        markerClusterer.onClick = function(clickedClusterIcon){
+        	
+        	if (clickedClusterIcon.markers_.length > 300) {
+        		alert('please choose locations with less than 300');
+        		return false;
+        	}
+        	
+        	var lat = clickedClusterIcon.center_.lat()
+			,	lng = clickedClusterIcon.center_.lng();
+        	
+        	var photos = clickedClusterIcon.markers_.map(function(e){
+        		return e.title;
+        	});
+        	
+			fetchInfoWindowContent(photos, {lat: lat, lng: lng});
+        }
+
+	}
+	
+	$(document).keyup(function(e) {
+	     if (e.keyCode == 27) { // escape key maps to keycode `27`
+	        infowindow.close();
+	    }
+	});
+	</script>
+</body>
+</html>
