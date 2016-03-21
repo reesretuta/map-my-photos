@@ -5,7 +5,6 @@ Who wants to rely on iPhoto simply to browse geo-tagged photos on a map? --no on
 
 * clone project locally `git clone https://github.com/reesretuta/map-my-photos && cd map-my-photos`
 * install node dependencies `npm install`
-
 * start app: `node app.js --add /path/to/folder1 /path/to/folder2` (drag/drop desired folder(s) paths into terminal)
 * load `http://localhost:8080` in browser
 * magic :)
