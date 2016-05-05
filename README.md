@@ -11,7 +11,7 @@ Who wants to rely on iPhoto simply to browse geo-tagged photos on a map? --no on
 * kill app with `ctrl + c`
 
 ### Restarting Project
-* to restart app run: `node app.js` will use history of all previously added folder(s)
+* to restart app run: `node app.js` or `npm start` will use history of all previously added folder(s)
 * optional: add additional folders until your entire photo collection is mapped!
 
 ### To Remove Folders From Cache

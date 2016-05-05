@@ -8,5 +8,8 @@
     "exif": "~0.6.0",
     "express": "~4.13.4"
   },
+  "scripts": {
+    "start": "node app.js"
+  },
   "author": "Rees Retuta"
 }
